@@ -23,7 +23,7 @@ OS="$(lsb_release -is)"
 function getIni() {
     startsection="$1"
     endsection="$2"
-    output="$(awk "/$startsection/{ f = 1; next } /$endsection/{ f = 0 } f" "${configFile}")"
+    output="$(awk "/$startsection/{ f = 1; next } /$endsection/{ f = 0 } f" "${CONFIG_FILE}")"
 }
 
 function backupConfigs() {
@@ -84,10 +84,10 @@ function checkProxmox() {
         echo -e "\n🛑  No PVE Detected, abortin...\n"
         exit 1
     else
-        PVEVERSION=$(pveversion | awk '{print $2}')
+        PVEVERSION="$(pveversion | awk '{print $2}')"
         msg_ok "PVE Version ${PVEVERSION} detected"
     fi
-    if [ $(pveversion | grep "pve-manager/7" | wc -l) -ne 1 ]; then
+    if [ "$(pveversion | grep "pve-manager/7" | wc -l)" -ne 1 ]; then
         echo -e "\n${RD}⚠ This version of Proxmox Virtual Environment is not supported"
         echo -e "Requires PVE Version: 7.XX${CL}"
         echo -e "\nExiting..."
@@ -136,10 +136,10 @@ function checkScript() {
     header_info
     get_Params "$@"
     if [[ "$EUID" = 0 ]]; then
-        if [[-z $CONFIG_FILE ]]; then
+        if [[ -z $CONFIG_FILE ]]; then
             CONFIG_FILE="config.ini"
         fi
-        if [[-z $SETTINGS_FILE ]]; then
+        if [[ -z $SETTINGS_FILE ]]; then
             SETTINGS_FILE="settings.ini"
         fi
         if [[! -f $CONFIG_FILE ]]; then
@@ -340,8 +340,8 @@ function setLimits() {
         DEFAULT_TAG="master"
         TAG=${TAG:-$DEFAULT_TAG}
         BASE_URL="https://raw.githubusercontent.com/$REPO/$TAG"
-        PVEVersion=$(pveversion --verbose | grep pve-manager | cut -c 14- | cut -c -6) # Below pveversion pre-run check
-        PVEVersionMajor=$(echo $PVEVersion | cut -d'-' -f1)
+        PVEVersion="$(pveversion --verbose | grep pve-manager | cut -c 14- | cut -c -6)" # Below pveversion pre-run check
+        PVEVersionMajor="$(echo "$PVEVersion" | cut -d'-' -f1)"
         if test -d "$OFFLINEDIR"; then
             msg_info "Offline directory detected, entering offline mode."
             OFFLINE=true
@@ -369,19 +369,19 @@ function setLimits() {
         fi
         backupConfigs "$TEMPLATE_FILE"
         if [ "$OFFLINE" = false ]; then
-            curl -s $BASE_URL/PVEDiscordDark/sass/PVEDiscordDark.css >/usr/share/pve-manager/css/dd_style.css >/dev/null 2>&1
+            curl -s "$BASE_URL"/PVEDiscordDark/sass/PVEDiscordDark.css >/usr/share/pve-manager/css/dd_style.css >/dev/null 2>&1
         else
             cp "$OFFLINEDIR/PVEDiscordDark/sass/PVEDiscordDark.css" /usr/share/pve-manager/css/dd_style.css >/dev/null 2>&1
         fi
         if [ "$OFFLINE" = false ]; then
-            curl -s $BASE_URL/PVEDiscordDark/js/PVEDiscordDark.js >/usr/share/pve-manager/js/dd_patcher.js >/dev/null 2>&1
+            curl -s "$BASE_URL"/PVEDiscordDark/js/PVEDiscordDark.js >/usr/share/pve-manager/js/dd_patcher.js >/dev/null 2>&1
         else
             cp "$OFFLINEDIR/PVEDiscordDark/js/PVEDiscordDark.js" /usr/share/pve-manager/js/dd_patcher.js >/dev/null 2>&1
         fi
-        if !(grep -Fq "<link rel='stylesheet' type='text/css' href='/pve2/css/dd_style.css'>" $TEMPLATE_FILE); then
+        if ! (grep -Fq "<link rel='stylesheet' type='text/css' href='/pve2/css/dd_style.css'>" $TEMPLATE_FILE); then
             echo "<link rel='stylesheet' type='text/css' href='/pve2/css/dd_style.css'>" >>$TEMPLATE_FILE
         fi
-        if !(grep -Fq "<script type='text/javascript' src='/pve2/js/dd_patcher.js'></script>" $TEMPLATE_FILE); then
+        if ! (grep -Fq "<script type='text/javascript' src='/pve2/js/dd_patcher.js'></script>" $TEMPLATE_FILE); then
             echo "<script type='text/javascript' src='/pve2/js/dd_patcher.js'></script>" >>$TEMPLATE_FILE
         fi
 
@@ -394,9 +394,9 @@ function setLimits() {
         ITER=0
         for image in "${IMAGELISTARR[@]}"; do
             if [ "$OFFLINE" = false ]; then
-                curl -s $BASE_URL/PVEDiscordDark/images/$image >/usr/share/pve-manager/images/$image >/dev/null 2>&1
+                curl -s "$BASE_URL"/PVEDiscordDark/images/"$image" >/usr/share/pve-manager/images/"$image" >/dev/null 2>&1
             else
-                cp "$OFFLINEDIR/PVEDiscordDark/images/$image" /usr/share/pve-manager/images/$image
+                cp "$OFFLINEDIR/PVEDiscordDark/images/$image" /usr/share/pve-manager/images/"$image"
             fi
             ((ITER++))
         done
