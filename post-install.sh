@@ -1,10 +1,9 @@
 #!/bin/bash
-# 
+#
 # This script incorporates the following:
 # https://tteck.github.io/Proxmox/
 # https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_11_Bullseye
 # https://github.com/Weilbyte/PVEDiscordDark
-
 
 shopt -s inherit_errexit nullglob
 YW=$(echo "\033[33m")
@@ -209,15 +208,23 @@ function basicSettings() {
     fi
     if [[ "$DISABLE_SUB_BANNER" = "yes" ]]; then
         msg_info "Disabling Subscription Banner"
-        echo "DPkg::Post-Invoke { \"dpkg -V proxmox-widget-toolkit | grep -q '/proxmoxlib\.js$'; if [ \$? -eq 1 ]; then { sed -i '/data.status/{s/\!//;s/Active/NoMoreNagging/}' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; }; fi\"; };" >/etc/apt/apt.conf.d/no-nag-script >/dev/null 2>&1
-        apt --reinstall install proxmox-widget-toolkit &>/dev/null
-        msg_ok "Disabled Subscription Banner"
+        if [ -f "/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js" ]; then
+            getIni "START_SUB_BANNER" "END_SUB_BANNER"
+            printf "%s" "$output" | tee -a /etc/cron.daily/pve-nosub >/dev/null 2>&1
+            chmod 755 /etc/cron.daily/pve-nosub >/dev/null 2>&1
+            bash /etc/cron.daily/pve-nosub >/dev/null 2>&1
+            echo "DPkg::Post-Invoke { \"dpkg -V proxmox-widget-toolkit | grep -q '/proxmoxlib\.js$'; if [ \$? -eq 1 ]; then { sed -i '/data.status/{s/\!//;s/Active/NoMoreNagging/}' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; }; fi\"; };" >/etc/apt/apt.conf.d/no-nag-script >/dev/null 2>&1
+            apt --reinstall install proxmox-widget-toolkit &>/dev/null
+            msg_ok "Disabled Subscription Banner"
+        else
+            msg_warn "Subscription Banner not found, skipping..."
+        fi
     fi
     if [[ "$UPGRADE_SYSTEM" = "yes" ]]; then
         msg_info "Upgrading System (This might take a while)"
         apt-get update >/dev/null 2>&1
         apt-get -y dist-upgrade >/dev/null 2>&1
-        msg_ok "Upgraded System successfully"
+        msg_ok "Upgraded System successfully"-
     fi
     if [[ "$APT_IPV4" = "yes" ]]; then
         msg_info "Setting APT to use IPv4"
