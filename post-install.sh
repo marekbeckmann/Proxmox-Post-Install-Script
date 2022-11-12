@@ -216,7 +216,7 @@ function basicSettings() {
     if [[ "$COMMON_UTILS" = "yes" ]]; then
         msg_info "Installing Common Utilities (this might take a while)"
         apt-get -y update >/dev/null 2>&1
-        apt-get -y install curl wget git vim htop net-tools apt-transport-https debian-archive-keyring ca-certificates zfsutils-linux proxmox-backup-restore-image build-essential dnsutils iperf software-properties-common unzip zip >/dev/null 2>&1
+        apt-get -y install curl wget git vim htop net-tools colordiff apt-transport-https debian-archive-keyring ca-certificates zfsutils-linux proxmox-backup-restore-image build-essential dnsutils iperf software-properties-common unzip zip >/dev/null 2>&1
         msg_ok "Installed Common Utilities"
     fi
     if [[ "$FIX_AMD" = "yes" ]]; then
