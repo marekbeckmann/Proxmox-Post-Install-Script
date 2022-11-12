@@ -142,7 +142,7 @@ function checkScript() {
         if [[ -z $SETTINGS_FILE ]]; then
             SETTINGS_FILE="settings.ini"
         fi
-        if [[! -f $CONFIG_FILE ]]; then
+        if [[ ! -f $CONFIG_FILE ]]; then
             errorhandler "Config file not found"
         fi
         if [[ -f $SETTINGS_FILE ]]; then
