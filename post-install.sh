@@ -414,6 +414,6 @@ function cleanUp() {
     apt -y autoclean >/dev/null 2>&1
     msg_ok "Everything cleaned up"
     echo -e "\n${GN} Script has finished with the post-install routine.\n
-    ${RD}⚠ Please reboot your server to apply all changes.\n{CL}"
+    ${RD}⚠ Please reboot your server to apply all changes.\n ${CL}"
 }
 checkScript "$@"
