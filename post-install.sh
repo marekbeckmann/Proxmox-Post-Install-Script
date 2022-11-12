@@ -217,7 +217,7 @@ function basicSettings() {
         msg_info "Upgrading System (This might take a while)"
         apt-get update >/dev/null 2>&1
         apt-get -y dist-upgrade >/dev/null 2>&1
-        msg_ok "Upgraded System, reboot required"
+        msg_ok "Upgraded System successfully"
     fi
     if [[ "$APT_IPV4" = "yes" ]]; then
         msg_info "Setting APT to use IPv4"
@@ -371,7 +371,8 @@ function setLimits() {
         else
             local SUPPORTEDARR=($(echo "$SUPPORTED" | tr ',' '\n'))
             if ! (printf '%s\n' "${SUPPORTEDARR[@]}" | grep -q -P "$PVEVersionMajor"); then
-                errorhandler "Cant install Dark Theme, unsupported PVE version: $PVEVersion"
+                msg_error "Cant install Dark Theme, unsupported PVE version: $PVEVersion"
+                cleanUp
             fi
         fi
         backupConfigs "$TEMPLATE_FILE"
@@ -422,5 +423,6 @@ function cleanUp() {
     msg_ok "Everything cleaned up"
     echo -e "\n${GN} Script has finished with the post-install routine.\n
     ${RD}⚠ Please reboot your server to apply all changes.\n ${CL}"
+    exit 0
 }
 checkScript "$@"
