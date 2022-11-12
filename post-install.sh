@@ -84,7 +84,7 @@ function checkProxmox() {
         echo -e "\n🛑  No PVE Detected, aborting...\n"
         exit 1
     else
-        PVEVERSION="$(pveversion | awk '{print $2}')"
+        PVEVERSION="$(pveversion --verbose | grep pve-manager | cut -c 14- | cut -c -6)"
         msg_ok "PVE Version ${PVEVERSION} detected"
     fi
     if [ "$(pveversion | grep "pve-manager/7" | wc -l)" -ne 1 ]; then
@@ -364,7 +364,7 @@ function setLimits() {
         else
             local SUPPORTEDARR=($(echo "$SUPPORTED" | tr ',' '\n'))
             if ! (printf '%s\n' "${SUPPORTEDARR[@]}" | grep -q -P "$PVEVersionMajor"); then
-                errorhandler "Unsupported PVE version: $PVEVersion"
+                errorhandler "Cant install Dark Theme, unsupported PVE version: $PVEVersion"
             fi
         fi
         backupConfigs "$TEMPLATE_FILE"
