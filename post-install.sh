@@ -314,8 +314,16 @@ function setLimits() {
         msg_ok "Optimised Max FS"
     fi
     if [[ "$CUSTOM_BASHRC" = "yes" ]]; then
+        msg_info "Customising Bashrc"
+        getIni "START_BASHPROMPT" "END_BASHPROMPT"
+        printf "%s" "$output" | tee -a /etc/profile.d/custom_bash_prompt.sh >/dev/null 2>&1
+        msg_ok "Customised Bashrc"
     fi
     if [[ "$CUSTOM_ALIASE" = "yes" ]]; then
+        msg_info "Customising Aliases"
+        getIni "START_BASHALIAS" "END_BASHALIAS"
+        printf "%s" "$output" | tee -a /etc/profile.d/custom_aliases.sh >/dev/null 2>&1
+        msg_ok "Customised Aliases"
     fi
 }
 
