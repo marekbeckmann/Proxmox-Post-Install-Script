@@ -81,7 +81,7 @@ function yesNoDialog() {
 
 function checkProxmox() {
     if ! command -v pveversion >/dev/null 2>&1; then
-        echo -e "\n🛑  No PVE Detected, abortin...\n"
+        echo -e "\n🛑  No PVE Detected, aborting...\n"
         exit 1
     else
         PVEVERSION="$(pveversion | awk '{print $2}')"
