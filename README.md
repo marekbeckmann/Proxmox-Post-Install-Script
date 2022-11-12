@@ -8,7 +8,8 @@ This script is designed to be run after a fresh install of Proxmox VE. It will i
 
 ```bash
 wget -qL https://raw.githubusercontent.com/marekbeckmann/Proxmox-Post-Install-Script/main/config.ini && \
-bash -c "$(wget -qLO - https://raw.githubusercontent.com/marekbeckmann/Proxmox-Post-Install-Script/main/post-install.sh)"
+wget -qL https://raw.githubusercontent.com/marekbeckmann/Proxmox-Post-Install-Script/main/post-install.sh &&\
+bash post-install.sh
 ```
 
 ## Run with custom settings
