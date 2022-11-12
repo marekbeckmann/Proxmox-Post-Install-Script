@@ -23,6 +23,6 @@ wget -qL https://raw.githubusercontent.com/marekbeckmann/Proxmox-Post-Install-Sc
 Edit `settings.ini` and change the settings to your liking. After that, run the script with the following command:
 
 ```bash
-bash post-install.sh -s settings.ini
+bash post-install.sh
 ```
 
