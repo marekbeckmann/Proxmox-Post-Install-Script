@@ -1,4 +1,10 @@
 #!/bin/bash
+# 
+# This script incorporates the following:
+# https://tteck.github.io/Proxmox/
+# https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_11_Bullseye
+# https://github.com/Weilbyte/PVEDiscordDark
+
 
 shopt -s inherit_errexit nullglob
 YW=$(echo "\033[33m")
