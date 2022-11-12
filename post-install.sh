@@ -56,6 +56,7 @@ function errorhandler() {
 }
 
 function header_info {
+    clear
     echo -e "${RD}
     ____ _    _____________   ____             __     ____           __        ____
    / __ \ |  / / ____/__  /  / __ \____  _____/ /_   /  _/___  _____/ /_____ _/ / /
