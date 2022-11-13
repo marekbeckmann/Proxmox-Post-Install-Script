@@ -291,8 +291,9 @@ function setLimits() {
     fi
     if [[ "$OPTIMISE_LOGROTATE" = "yes" ]]; then
         msg_info "Optimising Logrotate"
+        backupConfigs "/etc/logrotate.conf"
         getIni "START_LOGROTATE" "END_LOGROTATE"
-        printf "%s" "$output" | tee -a /etc/logrotate.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/logrotate.conf >/dev/null 2>&1
         systemctl restart logrotate >/dev/null 2>&1
         msg_ok "Optimised Logrotate"
         if [[ ! "$(systemctl is-active logrotate)" = "active" ]]; then
@@ -372,11 +373,9 @@ function setLimits() {
 function checkProxmoxRunning() {
     if [[ ! "$(systemctl is-active pve-cluster)" = "active" ]]; then
         msg_error "Proxmox is not running"
-        cleanUp
     fi
     if [[ ! "$(systemctl is-active pve-fireweall)" = "active" ]]; then
-        msg_error "Proxmox firewall is not running"
-        cleanUp
+        msg_warn "Proxmox firewall is not running"
     fi
 }
 
