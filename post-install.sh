@@ -100,6 +100,11 @@ function checkProxmox() {
         echo -e "\nExiting..."
         exit 1
     fi
+    if [ "$(qm list | grep running | wc -l)" -ne 0 ]; then
+        echo -e "\n${RD}⚠ You have running VMs, please stop them before continuing${CL}"
+        echo -e "\nExiting..."
+        exit 1
+    fi
 }
 
 function helpMsg() {
@@ -196,6 +201,7 @@ function setDefaults() {
 }
 
 function basicSettings() {
+    apt-get -y update >/dev/null 2>&1 || errorhandler "Failed to update apt"
     if [[ "$DISABLE_ENTERPRISE" = "yes" ]]; then
         msg_info "Disabling Enterprise Repository"
         sed -i "s/^deb/#deb/g" /etc/apt/sources.list.d/pve-enterprise.list >/dev/null 2>&1
@@ -223,41 +229,39 @@ function basicSettings() {
     fi
     if [[ "$UPGRADE_SYSTEM" = "yes" ]]; then
         msg_info "Upgrading System (This might take a while)"
-        apt-get update >/dev/null 2>&1
-        apt-get -y dist-upgrade >/dev/null 2>&1
-        msg_ok "Upgraded System successfully"-
+        apt-get -y dist-upgrade >/dev/null 2>&1 || errorhandler "Failed to upgrade system,aborting..."
+        msg_ok "Upgraded System successfully"
     fi
     if [[ "$APT_IPV4" = "yes" ]]; then
         msg_info "Setting APT to use IPv4"
-        echo -e "Acquire::Languages \"none\";\\n" msg_ok "Set APT to use IPv4" >/etc/apt/apt.conf.d/99-xs-disable-translations >/dev/null 2>&1
+        echo -e "Acquire::ForceIPv4 \"true\";\\n" >/etc/apt/apt.conf.d/99-xs-force-ipv4 >/dev/null 2>&1
         msg_ok "Set APT to use IPv4"
     fi
     if [[ "$COMMON_UTILS" = "yes" ]]; then
         msg_info "Installing Common Utilities (this might take a while)"
-        apt-get -y update >/dev/null 2>&1
-        apt-get -y install curl wget git vim htop net-tools colordiff apt-transport-https debian-archive-keyring ca-certificates zfsutils-linux proxmox-backup-restore-image build-essential dnsutils iperf software-properties-common unzip zip >/dev/null 2>&1
+        apt-get -y install curl wget git vim htop net-tools colordiff apt-transport-https debian-archive-keyring ca-certificates zfsutils-linux proxmox-backup-restore-image build-essential dnsutils iperf software-properties-common unzip zip >/dev/null 2>&1 || errorhandler "Failed to install common utilities, aborting..."
         msg_ok "Installed Common Utilities"
     fi
     if [[ "$FIX_AMD" = "yes" ]]; then
         msg_info "Checking for AMD CPU"
         if [ "$(grep -i -m 1 "model name" /proc/cpuinfo | grep -i "EPYC")" != "" ]; then
-            msg_ok "AMD EPYC detected"
+            msg_ok "AMD EPYC CPU detected"
         elif [ "$(grep -i -m 1 "model name" /proc/cpuinfo | grep -i "Ryzen")" != "" ]; then
-            msg_ok "AMD Ryzen detected"
+            msg_ok "AMD Ryzen CPU detected"
         else
             msg_warn "No AMD CPU detected, skipping"
             FIX_AMD="no"
         fi
-        if [ "${FIX_AMD}" == "yes" ]; then
+        if [ "$FIX_AMD" = "yes" ]; then
             msg_info "Installing AMD Fixes"
             if ! grep "GRUB_CMDLINE_LINUX_DEFAULT" /etc/default/grub | grep -q "idle=nomwait"; then
                 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="idle=nomwait /g' /etc/default/grub >/dev/null 2>&1
-                update-grub >/dev/null 2>&1
+                update-grub >/dev/null 2>&1 || errorhandler "Failed to update grub, aborting..."
             fi
             echo "options kvm ignore_msrs=Y" >>/etc/modprobe.d/kvm.conf >/dev/null 2>&1
             echo "options kvm report_ignored_msrs=N" >>/etc/modprobe.d/kvm.conf >/dev/null 2>&1
             /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::='--force-confdef' install pve-kernel-5.15 >/dev/null 2>&1
-            msg_ok "Installed AMD Fixes (Reboot required)"
+            msg_ok "Installed AMD Fixes"
         fi
     fi
     if [[ "$KERNEL_SOURCE_HEADERS" = "yes" ]]; then
@@ -289,6 +293,9 @@ function setLimits() {
         printf "%s" "$output" | tee -a /etc/logrotate.conf >/dev/null 2>&1
         systemctl restart logrotate >/dev/null 2>&1
         msg_ok "Optimised Logrotate"
+        if [[ ! "$(systemctl is-active logrotate)" = "active" ]]; then
+            msg_warn "Logrotate is not running"
+        fi
     fi
     if [[ "$OPTIMISE_JOURNALD" = "yes" ]]; then
         msg_info "Optimising JournalD"
@@ -298,6 +305,9 @@ function setLimits() {
         journalctl --vacuum-size=64M --vacuum-time=1d >/dev/null 2>&1
         journalctl --rotate >/dev/null 2>&1
         msg_ok "Optimised JournalD"
+        if [[ ! "$(systemctl is-active systemd-journald)" = "active" ]]; then
+            msg_warn "JournalD is not running"
+        fi
     fi
     if [[ "$POPULATE_ENTROPY" = "yes" ]]; then
         msg_info "Populate Entropy"
@@ -307,6 +317,9 @@ function setLimits() {
         systemctl daemon-reload >/dev/null 2>&1
         systemctl enable haveged >/dev/null 2>&1
         msg_ok "Entropy populated successfully"
+        if [[ ! "$(systemctl is-active haveged)" = "active" ]]; then
+            msg_warn "Haveged is not running"
+        fi
     fi
     if [[ "$OPTIMISE_VZDUMP" = "yes" ]]; then
         msg_info "Optimising vzdump"
@@ -336,21 +349,32 @@ function setLimits() {
         msg_info "Customising Bashrc"
         getIni "START_BASHPROMPT" "END_BASHPROMPT"
         printf "%s" "$output" | tee -a /etc/profile.d/custom_bash_prompt.sh >/dev/null 2>&1
-        msg_ok "Customised Bashrc"
+        msg_ok "Added custom bash prompt"
     fi
     if [[ "$CUSTOM_ALIASE" = "yes" ]]; then
         msg_info "Customising Aliases"
         getIni "START_BASHALIAS" "END_BASHALIAS"
         printf "%s" "$output" | tee -a /etc/profile.d/custom_aliases.sh >/dev/null 2>&1
-        msg_ok "Customised Aliases"
+        msg_ok "Added custom Bash aliases"
     fi
     if [[ "$INSTALL_DARKTHEME" = "yes" ]]; then
-        msg_info "Installing Dark Theme"
+        msg_info "Installing Dark Theme (This might take a while)"
         bash <(curl -s https://raw.githubusercontent.com/Weilbyte/PVEDiscordDark/master/PVEDiscordDark.sh) -s install || {
             msg_error "Failed to install Dark Theme"
             cleanUp
         }
         msg_ok "Dark Theme installed successfully"
+    fi
+}
+
+function checkProxmoxRunning() {
+    if [[ ! "$(systemctl is-active pve-cluster)" = "active" ]]; then
+        msg_error "Proxmox is not running"
+        cleanUp
+    fi
+    if [[ ! "$(systemctl is-active pve-fireweall)" = "active" ]]; then
+        msg_error "Proxmox firewall is not running"
+        cleanUp
     fi
 }
 
@@ -362,6 +386,7 @@ function cleanUp() {
     pve-efiboot-tool refresh >/dev/null 2>&1
     apt -y autoremov >/dev/null 2>&1
     apt -y autoclean >/dev/null 2>&1
+    checkProxmoxRunning
     msg_ok "Everything cleaned up"
     echo -e "\n${GN} Script has finished with the post-install routine.\n
     ${RD}⚠ Please reboot your server to apply all changes.\n ${CL}"
