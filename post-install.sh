@@ -159,7 +159,7 @@ function checkScript() {
         fi
         if [[ -f $SETTINGS_FILE ]]; then
             msg_ok "Settings file found, using custom settings"
-            . "$SETTINGS_FILE"
+            . "$SETTINGS_FILE" || errorhandler "Error while sourcing settings file"
         else
             msg_warn "Settings file not found, using default settings"
             yesNoDialog "Do you want to continue? [Y/n]: "
@@ -296,9 +296,6 @@ function setLimits() {
         printf "%s" "$output" | tee /etc/logrotate.conf >/dev/null 2>&1
         systemctl restart logrotate >/dev/null 2>&1
         msg_ok "Optimised Logrotate"
-        if [[ ! "$(systemctl is-active logrotate)" = "active" ]]; then
-            msg_warn "Logrotate is not running"
-        fi
     fi
     if [[ "$OPTIMISE_JOURNALD" = "yes" ]]; then
         msg_info "Optimising JournalD"
