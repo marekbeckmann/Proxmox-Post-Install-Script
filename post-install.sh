@@ -64,12 +64,14 @@ function errorhandler() {
 function header_info {
     clear
     echo -e "${RD}
-    ____ _    _____________   ____             __     ____           __        ____
-   / __ \ |  / / ____/__  /  / __ \____  _____/ /_   /  _/___  _____/ /_____ _/ / /
-  / /_/ / | / / __/    / /  / /_/ / __ \/ ___/ __/   / // __ \/ ___/ __/ __  / / / 
- / ____/| |/ / /___   / /  / ____/ /_/ (__  ) /_   _/ // / / (__  ) /_/ /_/ / / /  
-/_/     |___/_____/  /_/  /_/    \____/____/\__/  /___/_/ /_/____/\__/\__,_/_/_/   
-
+______ _   _ _____   ______ ______         _     _____          _        _ _ 
+| ___ \ | | |  ___| |___  / | ___ \       | |   |_   _|        | |      | | |
+| |_/ / | | | |__      / /  | |_/ /__  ___| |_    | | _ __  ___| |_ __ _| | |
+|  __/| | | |  __|    / /   |  __/ _ \/ __| __|   | || '_ \/ __| __/ _` | | |
+| |   \ \_/ / |___  ./ /    | | | (_) \__ \ |_   _| || | | \__ \ || (_| | | |
+\_|    \___/\____/  \_/     \_|  \___/|___/\__|  \___/_| |_|___/\__\__,_|_|_|
+                                                                             
+                                                                             
 
 ${CL}"
 }
@@ -162,7 +164,7 @@ function checkScript() {
             . "$SETTINGS_FILE" || errorhandler "Error while sourcing settings file"
         else
             msg_warn "Settings file not found, using default settings"
-            yesNoDialog "Do you want to continue? [Y/n]: "
+            yesNoDialog "Do you want to continue? [y/n]: "
             setDefaults
         fi
         if [[ -f /etc/pve-post-install/.post-install ]]; then
@@ -230,7 +232,7 @@ function basicSettings() {
         msg_info "Upgrading System (This might take a while)"
         apt-get -y update >/dev/null 2>&1 || errorhandler "Failed to update apt"
         apt-get -y dist-upgrade >/dev/null 2>&1 || errorhandler "Failed to upgrade system,aborting..."
-        msg_ok "Upgraded System successfully"
+        msg_ok "Upgraded System"
     fi
     if [[ "$APT_IPV4" = "yes" ]]; then
         msg_info "Setting APT to use IPv4"
@@ -316,7 +318,7 @@ function setLimits() {
         printf "%s" "$output" | tee -a /etc/default/haveged >/dev/null 2>&1
         systemctl daemon-reload >/dev/null 2>&1
         systemctl enable haveged >/dev/null 2>&1
-        msg_ok "Entropy populated successfully"
+        msg_ok "Entropy populated"
         if [[ ! "$(systemctl is-active haveged)" = "active" ]]; then
             msg_warn "Haveged is not running"
         fi
@@ -363,7 +365,7 @@ function setLimits() {
             msg_error "Failed to install Dark Theme"
             cleanUp
         }
-        msg_ok "Dark Theme installed successfully"
+        msg_ok "Dark Theme installed"
     fi
 }
 
