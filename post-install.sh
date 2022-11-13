@@ -201,7 +201,6 @@ function setDefaults() {
 }
 
 function basicSettings() {
-    apt-get -y update >/dev/null 2>&1 || errorhandler "Failed to update apt"
     if [[ "$DISABLE_ENTERPRISE" = "yes" ]]; then
         msg_info "Disabling Enterprise Repository"
         sed -i "s/^deb/#deb/g" /etc/apt/sources.list.d/pve-enterprise.list >/dev/null 2>&1
@@ -229,6 +228,7 @@ function basicSettings() {
     fi
     if [[ "$UPGRADE_SYSTEM" = "yes" ]]; then
         msg_info "Upgrading System (This might take a while)"
+        apt-get -y update >/dev/null 2>&1 || errorhandler "Failed to update apt"
         apt-get -y dist-upgrade >/dev/null 2>&1 || errorhandler "Failed to upgrade system,aborting..."
         msg_ok "Upgraded System successfully"
     fi
@@ -239,6 +239,7 @@ function basicSettings() {
     fi
     if [[ "$COMMON_UTILS" = "yes" ]]; then
         msg_info "Installing Common Utilities (this might take a while)"
+        apt-get -y update >/dev/null 2>&1 || errorhandler "Failed to update apt"
         apt-get -y install curl wget git vim htop net-tools colordiff apt-transport-https debian-archive-keyring ca-certificates zfsutils-linux proxmox-backup-restore-image build-essential dnsutils iperf software-properties-common unzip zip >/dev/null 2>&1 || errorhandler "Failed to install common utilities, aborting..."
         msg_ok "Installed Common Utilities"
     fi
@@ -266,6 +267,7 @@ function basicSettings() {
     fi
     if [[ "$KERNEL_SOURCE_HEADERS" = "yes" ]]; then
         msg_info "Installing Kernel Source headers"
+        apt-get -y update >/dev/null 2>&1 || errorhandler "Failed to update apt"
         apt-get -y install pve-headers module-assistant >/dev/null 2>&1
         msg_ok "Installed Kernel Source headers"
     fi
