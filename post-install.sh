@@ -161,7 +161,7 @@ function checkScript() {
             msg_ok "Settings file found, using custom settings"
             . "$SETTINGS_FILE"
         else
-            msg_info "Settings file not found, using default settings"
+            msg_warn "Settings file not found, using default settings"
             yesNoDialog "Do you want to continue? [Y/n]: "
             setDefaults
         fi
