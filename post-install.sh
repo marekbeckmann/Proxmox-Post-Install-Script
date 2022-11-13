@@ -2,8 +2,9 @@
 #
 # This script incorporates the following:
 # https://tteck.github.io/Proxmox/
-# https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_11_Bullseye
 # https://github.com/Weilbyte/PVEDiscordDark
+# https://github.com/extremeshok/xshok-proxmox
+# https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_11_Bullseye
 
 shopt -s inherit_errexit nullglob
 YW=$(echo "\033[33m")
@@ -345,77 +346,11 @@ function setLimits() {
     fi
     if [[ "$INSTALL_DARKTHEME" = "yes" ]]; then
         msg_info "Installing Dark Theme"
-        TEMPLATE_FILE="/usr/share/pve-manager/index.html.tpl"
-        SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/"
-        SCRIPTPATH="${SCRIPTDIR}$(basename "${BASH_SOURCE[0]}")"
-        OFFLINEDIR="${SCRIPTDIR}offline"
-        OFFLINE=false
-        REPO=${REPO:-"Weilbyte/PVEDiscordDark"}
-        DEFAULT_TAG="master"
-        TAG=${TAG:-$DEFAULT_TAG}
-        BASE_URL="https://raw.githubusercontent.com/$REPO/$TAG"
-        PVEVersion="$(pveversion --verbose | grep pve-manager | cut -c 14- | cut -c -6)" # Below pveversion pre-run check
-        PVEVersionMajor="$(echo "$PVEVersion" | cut -d'-' -f1)"
-        if test -d "$OFFLINEDIR"; then
-            msg_info "Offline directory detected, entering offline mode."
-            OFFLINE=true
-        fi
-        if [ "$OFFLINE" = false ]; then
-            local SUPPORTED=$(
-                curl -f -s "$BASE_URL/meta/supported" >/dev/null 2>&1
-                echo $?
-            )
-        else
-            local SUPPORTED=$(cat "$OFFLINEDIR/meta/supported" 2>/dev/null)
-        fi
-
-        if [ -z "$SUPPORTED" ]; then
-            if [ "$OFFLINE" = false ]; then
-                msg_warn "Could not reach supported version file ($BASE_URL/meta/supported). Skipping support check"
-            else
-                msg_warn"Could not find supported version file ($OFFLINEDIR/meta/supported). Skipping support check"
-            fi
-        else
-            local SUPPORTEDARR=($(echo "$SUPPORTED" | tr ',' '\n'))
-            if ! (printf '%s\n' "${SUPPORTEDARR[@]}" | grep -q -P "$PVEVersionMajor"); then
-                msg_error "Cant install Dark Theme, unsupported PVE version: $PVEVersion"
-                cleanUp
-            fi
-        fi
-        backupConfigs "$TEMPLATE_FILE"
-        if [ "$OFFLINE" = false ]; then
-            curl -s "$BASE_URL"/PVEDiscordDark/sass/PVEDiscordDark.css >/usr/share/pve-manager/css/dd_style.css >/dev/null 2>&1
-        else
-            cp "$OFFLINEDIR/PVEDiscordDark/sass/PVEDiscordDark.css" /usr/share/pve-manager/css/dd_style.css >/dev/null 2>&1
-        fi
-        if [ "$OFFLINE" = false ]; then
-            curl -s "$BASE_URL"/PVEDiscordDark/js/PVEDiscordDark.js >/usr/share/pve-manager/js/dd_patcher.js >/dev/null 2>&1
-        else
-            cp "$OFFLINEDIR/PVEDiscordDark/js/PVEDiscordDark.js" /usr/share/pve-manager/js/dd_patcher.js >/dev/null 2>&1
-        fi
-        if ! (grep -Fq "<link rel='stylesheet' type='text/css' href='/pve2/css/dd_style.css'>" $TEMPLATE_FILE); then
-            echo "<link rel='stylesheet' type='text/css' href='/pve2/css/dd_style.css'>" >>$TEMPLATE_FILE
-        fi
-        if ! (grep -Fq "<script type='text/javascript' src='/pve2/js/dd_patcher.js'></script>" $TEMPLATE_FILE); then
-            echo "<script type='text/javascript' src='/pve2/js/dd_patcher.js'></script>" >>$TEMPLATE_FILE
-        fi
-
-        if [ "$OFFLINE" = false ]; then
-            local IMAGELIST=$(curl -f -s "$BASE_URL/meta/imagelist")
-        else
-            local IMAGELIST=$(cat "$OFFLINEDIR/meta/imagelist")
-        fi
-        local IMAGELISTARR=($(echo "$IMAGELIST" | tr ',' '\n'))
-        ITER=0
-        for image in "${IMAGELISTARR[@]}"; do
-            if [ "$OFFLINE" = false ]; then
-                curl -s "$BASE_URL"/PVEDiscordDark/images/"$image" >/usr/share/pve-manager/images/"$image" >/dev/null 2>&1
-            else
-                cp "$OFFLINEDIR/PVEDiscordDark/images/$image" /usr/share/pve-manager/images/"$image"
-            fi
-            ((ITER++))
-        done
-        msg_ok "Dark Theme installed"
+        bash <(curl -s https://raw.githubusercontent.com/Weilbyte/PVEDiscordDark/master/PVEDiscordDark.sh) -s install || {
+            msg_error "Failed to install Dark Theme"
+            cleanUp
+        }
+        msg_ok "Dark Theme installed successfully"
     fi
 }
 
