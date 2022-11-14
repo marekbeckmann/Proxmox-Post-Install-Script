@@ -217,7 +217,7 @@ function basicSettings() {
         msg_info "Disabling Subscription Banner"
         if [ -f "/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js" ]; then
             getIni "START_SUB_BANNER" "END_SUB_BANNER"
-            printf "%s" "$output" | tee -a /etc/cron.daily/pve-nosub >/dev/null 2>&1
+            printf "%s" "$output" | tee /etc/cron.daily/pve-nosub >/dev/null 2>&1
             chmod 755 /etc/cron.daily/pve-nosub >/dev/null 2>&1
             bash /etc/cron.daily/pve-nosub >/dev/null 2>&1
             echo "DPkg::Post-Invoke { \"dpkg -V proxmox-widget-toolkit | grep -q '/proxmoxlib\.js$'; if [ \$? -eq 1 ]; then { sed -i '/data.status/{s/\!//;s/Active/NoMoreNagging/}' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; }; fi\"; };" >/etc/apt/apt.conf.d/no-nag-script >/dev/null 2>&1
@@ -278,11 +278,11 @@ function setLimits() {
     if [[ "$INCREASE_LIMITS" = "yes" ]]; then
         msg_info "Increasing max user watches, FD limit, FD ulimit, max key limit, ulimits"
         getIni "START_XSLIMIT" "END_XSLIMIT"
-        printf "%s" "$output" | tee -a /etc/sysctl.d/99-xs-maxwatches.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/sysctl.d/99-xs-maxwatches.conf >/dev/null 2>&1
         getIni "START_FD_LIMIT" "END_FD_LIMIT"
-        printf "%s" "$output" | tee -a /etc/security/limits.d/99-xs-limits.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/security/limits.d/99-xs-limits.conf >/dev/null 2>&1
         getIni "START_KERNEL_LIMIT" "END_KERNEL_LIMIT"
-        printf "%s" "$output" | tee -a /etc/sysctl.d/99-xs-maxkeys.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/sysctl.d/99-xs-maxkeys.conf >/dev/null 2>&1
         echo "DefaultLimitNOFILE=256000" >>/etc/systemd/system.conf >/dev/null 2>&1
         echo "DefaultLimitNOFILE=256000" >>/etc/systemd/user.conf >/dev/null 2>&1
         echo 'session required pam_limits.so' >>/etc/pam.d/common-session >/dev/null 2>&1
@@ -301,7 +301,7 @@ function setLimits() {
     if [[ "$OPTIMISE_JOURNALD" = "yes" ]]; then
         msg_info "Optimising JournalD"
         getIni "START_JOURNALD" "END_JOURNALD"
-        printf "%s" "$output" | tee -a /etc/systemd/journald.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/systemd/journald.conf >/dev/null 2>&1
         systemctl restart systemd-journald >/dev/null 2>&1
         journalctl --vacuum-size=64M --vacuum-time=1d >/dev/null 2>&1
         journalctl --rotate >/dev/null 2>&1
@@ -314,7 +314,7 @@ function setLimits() {
         msg_info "Populate Entropy"
         apt -y install haveged >/dev/null 2>&1
         getIni "START_ENTROPY" "END_ENTROPY"
-        printf "%s" "$output" | tee -a /etc/default/haveged >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/default/haveged >/dev/null 2>&1
         systemctl daemon-reload >/dev/null 2>&1
         systemctl enable haveged >/dev/null 2>&1
         msg_ok "Entropy populated"
@@ -331,31 +331,31 @@ function setLimits() {
     if [[ "$OPTIMISE_MEMORY" = "yes" ]]; then
         msg_info "Optimising Memory"
         getIni "START_MEMORY" "END_MEMORY"
-        printf "%s" "$output" | tee -a /etc/sysctl.d/99-xs-memory.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/sysctl.d/99-xs-memory.conf >/dev/null 2>&1
         msg_ok "Optimised Memory"
     fi
     if [[ "$FIX_SWAP" = "yes" ]]; then
         msg_info "Fixing Swap Bug"
         getIni "START_SWAP" "END_SWAP"
-        printf "%s" "$output" | tee -a /etc/sysctl.d/99-xs-swap.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/sysctl.d/99-xs-swap.conf >/dev/null 2>&1
         msg_ok "Fixed Swap Bug"
     fi
     if [[ "$OPTIMISE_MAX_FS" = "yes" ]]; then
         msg_info "Optimising Max FS"
         getIni "START_MAX_FS" "END_MAX_FS"
-        printf "%s" "$output" | tee -a /etc/sysctl.d/99-xs-fs.conf >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/sysctl.d/99-xs-fs.conf >/dev/null 2>&1
         msg_ok "Optimised Max FS"
     fi
     if [[ "$CUSTOM_BASHRC" = "yes" ]]; then
         msg_info "Customising Bashrc"
         getIni "START_BASHPROMPT" "END_BASHPROMPT"
-        printf "%s" "$output" | tee -a /etc/profile.d/custom_bash_prompt.sh >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/profile.d/custom_bash_prompt.sh >/dev/null 2>&1
         msg_ok "Added custom bash prompt"
     fi
     if [[ "$CUSTOM_ALIASE" = "yes" ]]; then
         msg_info "Customising Aliases"
         getIni "START_BASHALIAS" "END_BASHALIAS"
-        printf "%s" "$output" | tee -a /etc/profile.d/custom_aliases.sh >/dev/null 2>&1
+        printf "%s" "$output" | tee /etc/profile.d/custom_aliases.sh >/dev/null 2>&1
         msg_ok "Added custom Bash aliases"
     fi
     if [[ "$INSTALL_DARKTHEME" = "yes" ]]; then
