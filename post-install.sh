@@ -167,7 +167,8 @@ function checkScript() {
             setDefaults
         fi
         if [[ -f /etc/pve-post-install/.post-install ]]; then
-            errorhandler "Post-Install script already ran, aborting..."
+            msg_warn "Post-Install script already ran once"
+            yesNoDialog "Do you want to continue? [y/n]: "
         fi
         if [[ $(who am i) =~ \([-a-zA-Z0-9\.]+\)$ ]]; then
             msg_warn "Detected remote session"
