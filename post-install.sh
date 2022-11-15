@@ -378,7 +378,8 @@ function setUpNginx() {
         rm -f /etc/nginx/sites-enabled/default >/dev/null 2>&1
         getIni "START_NGINX" "END_NGINX"
         printf "%s" "$output" | tee /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-        sed -i "s/FQDN/${FQDN} ${HOSTNAME}/g" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+        sed -i "s/FQDN/${FQDN}/g" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+        sed -i "s/HOSTNAME/${HOSTNAME}/g" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
         if [[ -z "${SSL_CERT}" && -z "${SSL_CERT_KEY}" ]]; then
             msg_warn "No SSL Certificates provided, generating self-signed"
             openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/proxmox.key -out /etc/ssl/certs/proxmox.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${FQDN}" >/dev/null 2>&1
@@ -394,6 +395,7 @@ function setUpNginx() {
         ln -s /etc/nginx/sites-available/proxmox.conf /etc/nginx/sites-enabled/proxmox.conf >/dev/null 2>&1
         nginxStatus="$(nginx -t 2>&1)"
         if [[ "$nginxStatus" = *"successful"* ]]; then
+            nginx -s reload >/dev/null 2>&1
             msg_ok "Nginx installed and configured"
         else
             msg_error "Nginx failed to install or configure"
@@ -422,8 +424,12 @@ function cleanUp() {
     mkdir -p /etc/pve-post-install/ >/dev/null 2>&1
     touch /etc/pve-post-install/.post-install >/dev/null 2>&1
     msg_ok "Everything cleaned up"
-    echo -e "\n${GN} Script has finished with the post-install routine.\n
-    ${RD}⚠ Please reboot your server to apply all changes.\n ${CL}"
+    echo -e "\n${GN} Script has finished with the post-install routine.\n"
+    if [[ "${CONFIGURE_NGINX}" = "yes" ]]; then
+        echo -e "${GN} You can access Proxmox via: 
+        https://${FQDN} \n"
+    fi
+    echo -e "${RD}⚠ Please reboot your server to apply all changes.\n ${CL}"
     exit 0
 }
 checkScript "$@"
