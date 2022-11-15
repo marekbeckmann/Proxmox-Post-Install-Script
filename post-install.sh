@@ -385,8 +385,8 @@ function setUpNginx() {
         if [[ -z "${SSL_CERT}" && -z "${SSL_CERT_KEY}" ]]; then
             msg_warn "No SSL Certificates provided, generating self-signed"
             openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/proxmox.key -out /etc/ssl/certs/proxmox.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${FQDN}" >/dev/null 2>&1
-            sed -i '/^ssl_certificate/s/$/ \/etc\/ssl\/certs\/proxmox.crt;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-            sed -i '/^ssl_certificate_key/$/ \/etc\/ssl\/private\/proxmox.key;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i '/ssl_certificate$/s/$/ \/etc\/ssl\/certs\/proxmox.crt;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i '/ssl_certificate_key/s/$/ \/etc\/ssl\/private\/proxmox.key;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
         else
             msg_info "Using provided SSL Certificates"
             printf "%s" "$SSL_CERT" | tee /etc/ssl/certs/proxmox.pem >/dev/null 2>&1
