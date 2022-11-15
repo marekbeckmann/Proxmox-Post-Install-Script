@@ -237,7 +237,6 @@ function basicSettings() {
     else
         msg_warn "Skipping System Upgrade, this is not recommended"
     fi
-    fi
     if [[ "$APT_IPV4" = "yes" ]]; then
         msg_info "Setting APT to use IPv4"
         echo -e "Acquire::ForceIPv4 \"true\";\\n" >/etc/apt/apt.conf.d/99-xs-force-ipv4 >/dev/null 2>&1
@@ -386,14 +385,14 @@ function setUpNginx() {
         if [[ -z "${SSL_CERT}" && -z "${SSL_CERT_KEY}" ]]; then
             msg_warn "No SSL Certificates provided, generating self-signed"
             openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/proxmox.key -out /etc/ssl/certs/proxmox.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${FQDN}" >/dev/null 2>&1
-            sed -i "s/ssl_certificate.*/ssl_certificate \/etc\/ssl\/certs\/proxmox.crt;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-            sed -i "s/ssl_certificate_key.*/ssl_certificate_key \/etc\/ssl\/private\/proxmox.key;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i '/^ssl_certificate/s/$/ \/etc\/ssl\/certs\/proxmox.crt;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i '/^ssl_certificate_key/$/ \/etc\/ssl\/private\/proxmox.key;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
         else
             msg_info "Using provided SSL Certificates"
             printf "%s" "$SSL_CERT" | tee /etc/ssl/certs/proxmox.pem >/dev/null 2>&1
             printf "%s" "$SSL_CERT_KEY" | tee /etc/ssl/private/proxmox.key.pem >/dev/null 2>&1
-            sed -i "s/ssl_certificate.*/ssl_certificate \/etc\/ssl\/certs\/proxmox.pem;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-            sed -i "s/ssl_certificate_key.*/ssl_certificate_key \/etc\/ssl\/private\/proxmox.key.pem;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i '/^ssl_certificate/s/$/ \/etc\/ssl\/certs\/proxmox.crt;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i '/^ssl_certificate_key/$/ \/etc\/ssl\/private\/proxmox.key;/' /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
         fi
         ln -s /etc/nginx/sites-available/proxmox.conf /etc/nginx/sites-enabled/proxmox.conf >/dev/null 2>&1
         nginxStatus="$(nginx -t 2>&1)"
