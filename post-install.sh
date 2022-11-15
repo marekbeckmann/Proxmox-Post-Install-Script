@@ -428,8 +428,8 @@ function cleanUp() {
     msg_ok "Everything cleaned up"
     echo -e "\n${GN} Script has finished with the post-install routine.\n"
     if [[ "${CONFIGURE_NGINX}" = "yes" ]]; then
-        echo -e "${GN} You can access Proxmox via: 
-        https://${FQDN} \n"
+        echo -e "${GN} You can access Proxmox via:" 
+        echo -e "${GN}  https://${FQDN} \n"
     fi
     echo -e "${RD}⚠ Please reboot your server to apply all changes.\n ${CL}"
     exit 0
