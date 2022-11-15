@@ -234,6 +234,9 @@ function basicSettings() {
         apt-get -y update >/dev/null 2>&1 || errorhandler "Failed to update apt"
         apt-get -y dist-upgrade >/dev/null 2>&1 || errorhandler "Failed to upgrade system,aborting..."
         msg_ok "Upgraded System"
+    else
+        msg_warn "Skipping System Upgrade, this is not recommended"
+    fi
     fi
     if [[ "$APT_IPV4" = "yes" ]]; then
         msg_info "Setting APT to use IPv4"
