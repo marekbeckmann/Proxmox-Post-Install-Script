@@ -177,6 +177,7 @@ function checkScript() {
         checkProxmox
         basicSettings
         setLimits
+        setUpNginx
         cleanUp
     else
         errorhandler "You must run this script as root"
@@ -370,31 +371,33 @@ function setLimits() {
 }
 
 function setUpNginx() {
-    msg_info "Installing and setting up Nginx"
-    apt-get update >/dev/null 2>&1
-    apt-get -y install nginx >/dev/null 2>&1
-    rm -f /etc/nginx/sites-enabled/default >/dev/null 2>&1
-    getIni "START_NGINX" "END_NGINX"
-    printf "%s" "$output" | tee /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-    sed -i "s/FQDN/${FQDN} ${HOSTNAME}/g" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-    if [[ -z "${SSL_CERT}" && -z "${SSL_CERT_KEY}" ]]; then
-        msg_warn "No SSL Certificates provided, generating self-signed"
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/proxmox.key -out /etc/ssl/certs/proxmox.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${FQDN}" >/dev/null 2>&1
-        sed -i "s/ssl_certificate.*/ssl_certificate \/etc\/ssl\/certs\/proxmox.crt;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-        sed -i "s/ssl_certificate_key.*/ssl_certificate_key \/etc\/ssl\/private\/proxmox.key;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-    else
-        msg_info "Using provided SSL Certificates"
-        printf "%s" "$SSL_CERT" | tee /etc/ssl/certs/proxmox.pem >/dev/null 2>&1
-        printf "%s" "$SSL_CERT_KEY" | tee /etc/ssl/private/proxmox.key.pem >/dev/null 2>&1
-        sed -i "s/ssl_certificate.*/ssl_certificate \/etc\/ssl\/certs\/proxmox.pem;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-        sed -i "s/ssl_certificate_key.*/ssl_certificate_key \/etc\/ssl\/private\/proxmox.key.pem;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
-    fi
-    ln -s /etc/nginx/sites-available/proxmox.conf /etc/nginx/sites-enabled/proxmox.conf >/dev/null 2>&1
-    nginxStatus="$(nginx -t 2>&1)"
-    if [[ "$nginxStatus" = *"successful"* ]]; then
-        msg_ok "Nginx installed and configured"
-    else
-        msg_error "Nginx failed to install or configure"
+    if [[ "${CONFIGURE_NGINX}" = "yes" ]]; then
+        msg_info "Installing and setting up Nginx"
+        apt-get update >/dev/null 2>&1
+        apt-get -y install nginx >/dev/null 2>&1
+        rm -f /etc/nginx/sites-enabled/default >/dev/null 2>&1
+        getIni "START_NGINX" "END_NGINX"
+        printf "%s" "$output" | tee /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+        sed -i "s/FQDN/${FQDN} ${HOSTNAME}/g" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+        if [[ -z "${SSL_CERT}" && -z "${SSL_CERT_KEY}" ]]; then
+            msg_warn "No SSL Certificates provided, generating self-signed"
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/proxmox.key -out /etc/ssl/certs/proxmox.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${FQDN}" >/dev/null 2>&1
+            sed -i "s/ssl_certificate.*/ssl_certificate \/etc\/ssl\/certs\/proxmox.crt;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i "s/ssl_certificate_key.*/ssl_certificate_key \/etc\/ssl\/private\/proxmox.key;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+        else
+            msg_info "Using provided SSL Certificates"
+            printf "%s" "$SSL_CERT" | tee /etc/ssl/certs/proxmox.pem >/dev/null 2>&1
+            printf "%s" "$SSL_CERT_KEY" | tee /etc/ssl/private/proxmox.key.pem >/dev/null 2>&1
+            sed -i "s/ssl_certificate.*/ssl_certificate \/etc\/ssl\/certs\/proxmox.pem;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+            sed -i "s/ssl_certificate_key.*/ssl_certificate_key \/etc\/ssl\/private\/proxmox.key.pem;/" /etc/nginx/sites-available/proxmox.conf >/dev/null 2>&1
+        fi
+        ln -s /etc/nginx/sites-available/proxmox.conf /etc/nginx/sites-enabled/proxmox.conf >/dev/null 2>&1
+        nginxStatus="$(nginx -t 2>&1)"
+        if [[ "$nginxStatus" = *"successful"* ]]; then
+            msg_ok "Nginx installed and configured"
+        else
+            msg_error "Nginx failed to install or configure"
+        fi
     fi
 }
 
